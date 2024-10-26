@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Salas</title>
+</head>
+<body>
+    <h1>Upload de Salas</h1>
+    <form id="uploadSalasForm" enctype="multipart/form-data" method="POST" action="/upload/salas">
+        <label for="salasFile">Selecione o ficheiro de salas (CSV):</label>
+        <input type="file" id="salasFile" name="file">
+        <button type="submit">Upload Salas</button>
+    </form>
+</body>
+</html>

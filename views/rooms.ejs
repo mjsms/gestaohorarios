@@ -1,0 +1,73 @@
+<!-- Inclui o CSS e JS do Tabulator -->
+<link href="https://unpkg.com/tabulator-tables@5.1.7/dist/css/tabulator.min.css" rel="stylesheet">
+<script src="https://unpkg.com/tabulator-tables@5.1.7/dist/js/tabulator.min.js"></script>
+
+<h2>Upload de Salas</h2>
+<form id="uploadSalasForm" enctype="multipart/form-data">
+    <div class="file-field input-field">
+        <div class="btn">
+            <span>File</span>
+            <input type="file" id="salasFile" name="file">
+        </div>
+        <div class="file-path-wrapper">
+            <input class="file-path validate" type="text" placeholder="Selecione o ficheiro de salas (CSV)">
+        </div>
+    </div>
+    <button type="submit" class="btn waves-effect waves-light">Upload Salas</button>
+</form>
+
+<div class="row">
+    <!-- Container para a tabela do Tabulator com scroll horizontal -->
+    <h3>Ficheiro de Salas Carregado</h3>
+    <div class="table-container col s9" >
+        <div id="salas-table"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('uploadSalasForm').addEventListener('submit', function(e) {
+        e.preventDefault();  // Evitar o reload da página
+
+        const formData = new FormData(this);
+        fetch('/upload/salas', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao carregar o ficheiro.');
+            }
+            return response.text();
+        })
+        .then(data => {
+            // Mostrar mensagem de sucesso com o toast
+            M.toast({html: 'Salas carregadas com sucesso!', classes: 'green'});
+            // Atualizar a página para mostrar a tabela atualizada
+            location.reload();
+        })
+        .catch(error => {
+            // Mostrar mensagem de erro com o toast
+            M.toast({html: error.message || 'Erro ao carregar o ficheiro.', classes: 'red'});
+        });
+    });
+
+    // Carregar os dados da tabela de salas (Tabulator)
+    document.addEventListener('DOMContentLoaded', function() {
+        <% if (salas) { %>
+            const table = new Tabulator("#salas-table", {
+                data: <%- JSON.stringify(salas) %>, // Dados carregados do servidor (raw rendering)
+                autoColumns: true,  // Cria automaticamente as colunas com base nos dados
+                height:"311px",
+            });
+        <% } %>
+    });
+
+</script>
+
+
+<style>
+    .table-container{
+        overflow: hidden;
+        position: fixed;
+    }
+</style>
