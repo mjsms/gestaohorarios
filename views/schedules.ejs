@@ -56,25 +56,11 @@
     document.addEventListener('DOMContentLoaded', function() {
     const table = new Tabulator("#horarios-table", {
         ajaxURL: "/horarios/tabela", // URL para o endpoint de horários com paginação
-        ajaxParams: { page: 1, pageSize: 50 }, // Parâmetros iniciais
+        ajaxParams: { page: 1, pageSize: 250 }, // Parâmetros iniciais
         ajaxConfig: "GET", // Tipo de requisição
         pagination: "remote", // Usar paginação remota
-        paginationSize: 50, // Tamanho da página
-
-        ajaxURLGenerator: function(url, params) {
-            params.page = table.getPage(); // Define a página atual
-            params.pageSize = table.getPageSize(); // Define o tamanho da página
-            return url;
-        },
-
-        ajaxResponse: function(url, params, response) {
-            let last_page = response.totalPages;
-            let data = response.data;
-            return {last_page, data};
-        },
-
+        paginationSize: 250, // Tamanho da página
         autoColumns: true, // Gera colunas automaticamente
-        height: "311px", // Altura da tabela
         layout: "fitColumns",
         });
     });

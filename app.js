@@ -6,6 +6,16 @@ const path = require('path');
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
+const db = require('./models'); // Caminho para os modelos
+
+(async () => {
+    try {
+        await db.sequelize.sync({ force: true }); // `force: true` recria a bd
+        console.log('Database synced successfully.');
+    } catch (err) {
+        console.error('Error syncing database:', err);
+    }
+})();
 
 // Definir o motor de templates como EJS
 app.set('view engine', 'ejs');
@@ -82,7 +92,7 @@ app.get('/horarios', (req, res) => {
 
 app.get('/horarios/tabela', (req, res) => {
     const page = parseInt(req.query.page) || 1;   // Página solicitada
-    const pageSize = parseInt(req.query.pageSize) || 50; // Tamanho da página (número de itens por página)
+    const pageSize = parseInt(req.query.pageSize) || 250; // Tamanho da página (número de itens por página)
 
     const startIndex = (page - 1) * pageSize;
     const endIndex = page * pageSize;
@@ -91,10 +101,7 @@ app.get('/horarios/tabela', (req, res) => {
     // Define o cabeçalho Content-Type como application/json
     res.set('Content-Type', 'application/json'); 
     const totalPages = Math.ceil(horarios[0].length / pageSize);
-    res.json({
-        last_page: totalPages, // Adiciona o número total de páginas
-        data: horariosPaginados
-    });
+    res.json(horariosPaginados);
 });
 
 
@@ -163,89 +170,8 @@ app.get('/salas', (req, res) => {
 });
 
 
-
-
-// Função para analisar sobrelotação de salas
-function analisarSobrelotacao(horarios, salas) {
-    const problemasSobrelotacao = [];
-
-    horarios.forEach((horario) => {
-        const salaEncontrada = salas.find(sala => sala['Nome sala'] === horario['Sala da aula']);
-        
-        if (salaEncontrada && parseInt(horario['Inscritos no turno']) > parseInt(salaEncontrada['Capacidade Normal'])) {
-            problemasSobrelotacao.push({
-                turno: horario['Turno'],
-                turma: horario['Turma'],
-                sala: horario['Sala da aula'],
-                inscritos: horario['Inscritos no turno'],
-                capacidade: salaEncontrada['Capacidade Normal']
-            });
-        }
-    });
-
-    return problemasSobrelotacao;
-}
-
-// Função para analisar sobreposição de aulas
-function analisarSobreposicao(horarios) {
-    const problemasSobreposicao = [];
-
-    const gruposPorTurnoETurma = {};
-
-    // Agrupar horários por turno e turma
-    horarios.forEach((horario) => {
-        const chave = `${horario['Turno']}-${horario['Turma']}`;
-        if (!gruposPorTurnoETurma[chave]) {
-            gruposPorTurnoETurma[chave] = [];
-        }
-        gruposPorTurnoETurma[chave].push(horario);
-    });
-
-    // Verificar sobreposição dentro dos mesmos turnos/turmas
-    Object.keys(gruposPorTurnoETurma).forEach((chave) => {
-        const grupo = gruposPorTurnoETurma[chave];
-
-        for (let i = 0; i < grupo.length; i++) {
-            const aula1 = grupo[i];
-
-            for (let j = i + 1; j < grupo.length; j++) {
-                const aula2 = grupo[j];
-
-                if (aula1['Dia da Semana'] === aula2['Dia da Semana']) {
-                    const inicio1 = parseInt(aula1['Início'].replace(':', ''));
-                    const fim1 = parseInt(aula1['Fim'].replace(':', ''));
-                    const inicio2 = parseInt(aula2['Início'].replace(':', ''));
-                    const fim2 = parseInt(aula2['Fim'].replace(':', ''));
-
-                    if ((inicio1 < fim2 && fim1 > inicio2)) {
-                        problemasSobreposicao.push({
-                            turno: aula1['Turno'],
-                            turma: aula1['Turma'],
-                            conflito: `Aula 1: ${aula1['Início']}-${aula1['Fim']} / Aula 2: ${aula2['Início']}-${aula2['Fim']}`,
-                            dia: aula1['Dia da Semana']
-                        });
-                    }
-                }
-            }
-        }
-    });
-
-    return problemasSobreposicao;
-}
-
-// Endpoint para análise de qualidade
-app.get('/analise/qualidade', (req, res) => {
-    const sobrelotacao = analisarSobrelotacao(horarios, salas);
-    const sobreposicao = analisarSobreposicao(horarios);
-
-    res.json({
-        problemasSobrelotacao: sobrelotacao,
-        problemasSobreposicao: sobreposicao
-    });
-});
-
-
 // Servidor
 app.listen(3000, () => {
     console.log('Servidor a correr na porta 3000');
 }); 
+
