@@ -1,0 +1,58 @@
+<h2>Detalhes da Sala</h2>
+<form id="editClassRoomForm" method="POST" action="/classroom/<%= classRoom.id %>">
+    <!-- Campo para editar o nome da sala -->
+    <div>
+        <label for="name"><strong>Nome:</strong></label>
+        <input type="text" id="name" name="name" value="<%= classRoom.name %>" required>
+    </div>
+
+    <!-- Campo para editar a capacidade -->
+    <div>
+        <label for="capacity"><strong>Capacidade:</strong></label>
+        <input type="number" id="capacity" name="capacity" value="<%= classRoom.capacity %>" min="1" required>
+    </div>
+
+    <!-- Lista de características -->
+    <h3>Características:</h3>
+    <div class="feature-grid">
+        <% allFeatures.forEach((feature) => { %>
+            <div>
+                <label>
+                    <input 
+                        type="checkbox" 
+                        name="features" 
+                        value="<%= feature.id %>" 
+                        <%= classRoom.Features.some(f => f.id === feature.id) ? 'checked' : '' %>
+                    >
+                    <span><%= feature.name %></span>
+                </label>
+            </div>
+        <% }) %>
+    </div>
+
+    <div class="col s12" style="margin-top: 30px;">
+        <!-- Botões -->
+        <button type="submit" class="waves-effect waves-light btn modal-trigger">Salvar Alterações</button>
+        <a href="/classroom">Voltar para a Lista</a>
+    </div>
+</form>
+
+<style>
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust column width */
+        gap: 15px; /* Spacing between items */
+        margin-top: 20px;
+    }
+
+    .feature-grid div {
+        display: flex;
+        align-items: center;
+    }
+
+    .feature-grid label {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Space between checkbox and text */
+    }
+</style>

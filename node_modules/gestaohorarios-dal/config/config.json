@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "gestaohorarios",
+    "password": "menezes91",
+    "database": "gestaohorarios",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "gestaohorarios",
+    "password": "menezes91",
+    "database": "gestaohorarios",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "gestaohorarios",
+    "password": "menezes91",
+    "database": "gestaohorarios",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}

@@ -6,17 +6,22 @@
     <title>Gestão de Horários</title>
     <!-- Materialize CSS via CDN -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="/tabulator_materialize.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@5.1.7/dist/js/tabulator.min.js"></script>
     <style>
         body {
             display: flex;
+            min-height: 100vh; /* Garante que o corpo tenha no mínimo a altura da tela */
         }
         #sidebar {
             width: 250px;
-            height: 100vh;
             background-color: #263238;
             color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%; /* Faz o sidebar expandir junto com o conteúdo */
         }
-        #sidebar .nav-link {
+        .nav-link {
             color: white;
             padding: 15px;
             display: block;
@@ -40,19 +45,13 @@
 
         <!-- Menu lateral com mais espaçamento -->
         <ul class="nav flex-column p-3">
-
             <li class="nav-item">
-                <a href="/" class="nav-link white-text">Página Inicial</a>
+                <a href="/schedule" class="nav-link white-text">Horários</a>
             </li>
             <!-- Adicionar um separador -->
             <li><div class="divider"></div></li>
             <li class="nav-item">
-                <a href="/horarios" class="nav-link white-text">Upload de Horários</a>
-            </li>
-            <!-- Adicionar um separador -->
-            <li><div class="divider"></div></li>
-            <li class="nav-item">
-                <a href="/salas" class="nav-link white-text">Upload de Salas</a>
+                <a href="/classroom" class="nav-link white-text">Salas</a>
             </li>
 
         </ul>
