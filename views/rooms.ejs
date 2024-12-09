@@ -37,6 +37,10 @@
 <div class="row">
     <!-- Container para a tabela do Tabulator com scroll horizontal -->
     <h3>Salas</h3>
+    <div class="filter-container">
+        <label for="filterInput">Filtrar por Nome da Sala:</label>
+        <input type="text" id="filterInput" placeholder="Digite o nome da sala">
+    </div>
     <div id="salas-table"></div>
 </div>
 
@@ -85,29 +89,48 @@
 
 
     document.addEventListener('DOMContentLoaded', function () {
-    <% if (classRooms) { %>
         const table = new Tabulator("#salas-table", {
-            data: <%- JSON.stringify(classRooms) %>, // Dados carregados do servidor
-            autoColumns: false, // Desativar geração automática de colunas
-            layout: "fitColumns",
+            ajaxURL: "/classroom/json", // URL para o endpoint do backend
+            ajaxConfig: "GET", // Método de requisição
+            pagination: true, // Ativa paginação
+            paginationMode: "remote", // Habilita paginação remota
+            paginationSize: 10, // Número de itens por página
+            layout: "fitColumns", // Ajusta as colunas à largura da tabela
             columns: [
                 { title: "ID", field: "id", sorter: "number" },
-                { 
-                    title: "Nome da Sala", 
-                    field: "name", 
-                    sorter: "string", 
+                {
+                    title: "Nome da Sala",
+                    field: "name",
+                    sorter: "string",
                     widthGrow: 3,
-                    formatter: function(cell, formatterParams) {
+                    formatter: function (cell, formatterParams) {
                         const id = cell.getRow().getData().id;
                         const name = cell.getValue();
-                        return `<a href="/classroom/${id}" style="text-decoration:none;">${name} </a>`;
+                        return `<a href="/classroom/${id}" style="text-decoration:none;">${name}</a>`;
                     },
                 },
                 { title: "Capacidade", field: "capacity", sorter: "number", widthGrow: 2 },
                 { title: "Número de Características", field: "featureCount", sorter: "number", widthGrow: 3 },
             ],
+            ajaxResponse: function (url, params, response) {
+                // Processa a resposta para extrair dados e configurar paginação
+                return {
+                    data: response.data,
+                    last_page: response.last_page,
+                };
+            },
+            ajaxParams: {}, // Inicializa os parâmetros do filtro
         });
-        <% } %>
+
+        // Adicionar filtro externo
+        document.getElementById('filterInput').addEventListener('input', function () {
+            const filterValue = this.value.trim().toLowerCase();
+            table.setData("/classroom/json", { filter: filterValue }); // Envia o filtro para o backend
+        });
     });
+
+
+
+
 
 </script>

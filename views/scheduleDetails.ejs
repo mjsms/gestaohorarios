@@ -1,0 +1,130 @@
+<div class="container">
+    <h3>Detalhes do Horário</h3>
+    <p><strong>Descrição:</strong> <%= scheduleVersion.description %></p>
+    <p><strong>Estado:</strong> <%= scheduleVersion.status %></p>
+    <p><strong>Criado em:</strong> <%= scheduleVersion.createdAt %></p>
+
+    <!-- Filtro por Qualidade -->
+    <div class="row">
+        <label>
+            <input type="checkbox" id="filterQualityIssues" />
+            <span>Mostrar apenas horários com problemas de qualidade</span>
+        </label>
+    </div>
+
+    <!-- Abas -->
+    <div class="row">
+        <div class="col s12">
+            <ul class="tabs">
+                <li class="tab col s6"><a href="#tab-schedules" class="active">Listagem de Horários</a></li>
+                <li class="tab col s6"><a href="#tab-quality">Problemas de Qualidade</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Conteúdo das Abas -->
+    <div id="tab-schedules" class="col s12">
+        <div id="schedules-table" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="tab-quality" class="col s12">
+        <canvas id="qualityIssuesChart" width="400" height="200"></canvas>
+    </div>
+
+    <!-- Botão de Voltar -->
+    <a href="/schedule" class="btn waves-effect waves-light" style="margin-top: 20px;">Voltar</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar abas do Materialize
+        const tabs = document.querySelectorAll('.tabs');
+        M.Tabs.init(tabs);
+
+        // Inicializar Tabulator
+        const table = new Tabulator("#schedules-table", {
+            ajaxURL: `/schedule/${<%= scheduleVersion.id %>}/json`, // URL do backend
+            ajaxConfig: "GET", // Método de requisição
+            filterMode:"remote", //send filter data to the server instead of processing locally
+            sortMode:"remote", //send sort data to the server instead of processing locally
+            pagination: true, // Ativa paginação
+            paginationMode: "remote", // Habilita paginação remota
+            paginationSize: 10, // Número de itens por página
+            layout: "fitColumns", // Ajusta as colunas à largura da tabela
+            columns: [
+                { title: "ID", field: "id", sorter: "number", widthGrow: 1 },
+                { title: "Turno", field: "shiftName", sorter: "string", widthGrow: 2 },
+                { title: "Data", field: "date", sorter: "date", widthGrow: 2 },
+                { title: "Hora Início", field: "startTime", sorter: "string", widthGrow: 1 },
+                { title: "Hora Fim", field: "endTime", sorter: "string", widthGrow: 1 },
+                {
+                    title: "Sala",
+                    field: "classRoomName",
+                    sorter: "string",
+                    widthGrow: 2,
+                },
+                {
+                    title: "Qualidade",
+                    field: "QualityIssues",
+                    widthGrow: 1,
+                },
+            ],
+            ajaxRequesting: function (url, params) {
+                console.log("Requesting with params:", params); // Debug to ensure filters are being sent
+            },
+            ajaxResponse: function (url, params, response) {
+                // Processa a resposta para extrair dados e configurar paginação
+                return {
+                    data: response.data,
+                    last_page: response.last_page,
+                };
+            },
+        });
+
+        // Filtro por Problemas de Qualidade
+        document.getElementById('filterQualityIssues').addEventListener('change', function () {
+            const filterQuality = this.checked ? "true" : "false";
+            table.setFilter("hasQualityIssues", "=", filterQuality); // Apply filter
+        });
+
+        // Gráfico de Problemas de Qualidade
+        const ctx = document.getElementById('qualityIssuesChart').getContext('2d');
+        const qualityIssuesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Total', 'Sobrelotação', 'Salas Desadequadas', 'Aulas às 8h no Sábado'],
+                datasets: [{
+                    label: 'Número de Problemas',
+                    data: [
+                        <%= qualityIssues[0].total %>,
+                        <%= qualityIssues[0].overcrowded %>,
+                        <%= qualityIssues[0].unsuitableRooms %>,
+                        <%= qualityIssues[0].earlyMorningSaturdays %>
+                    ],
+                    backgroundColor: [
+                        'rgba(44, 99, 132, 0.6)', 
+                        'rgba(255, 99, 132, 0.6)', 
+                        'rgba(255, 159, 64, 0.6)', 
+                        'rgba(54, 162, 235, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(44, 99, 132, 1)', 
+                        'rgba(255, 99, 132, 1)', 
+                        'rgba(255, 159, 64, 1)', 
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>

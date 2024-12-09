@@ -6,16 +6,35 @@ const upload = multer({ storage: multer.memoryStorage() });
 const express = require('express');
 const { uploadClassRooms } = require('../controllers/classRoomController');
 const { models, sequelize } = require('../db'); 
-
 const router = express.Router();
-
+const { Op } = require('sequelize');
 // Rota para upload de salas
 router.post('/upload/', upload.single('file'), uploadClassRooms);
 
+
 router.get('/', async (req, res) => {
     try {
-        // Buscar as salas com a contagem de características associadas e ordenação por ID
-        const classRooms = await models.ClassRoom.findAll({
+        res.render('layout', { content: 'rooms' }); // Renderiza o arquivo classroom.ejs
+    } catch (err) {
+        console.error('Erro ao renderizar a página de salas:', err);
+        res.status(500).send('Erro ao carregar a página.');
+    }
+});
+
+
+router.get('/json', async (req, res) => {
+    try {
+        const { page = 1, pageSize = 10, filter = "" } = req.query;
+
+        const offset = (page - 1) * pageSize;
+
+        // Adiciona lógica de filtro (por nome)
+        const whereCondition = filter
+            ? { name: { [Op.iLike]: `%${filter}%` } } // Usa operador iLike para busca case-insensitive
+            : {};
+
+        const { count, rows } = await models.ClassRoom.findAndCountAll({
+            where: whereCondition, // Filtra os dados
             attributes: [
                 'id',
                 'name',
@@ -26,16 +45,22 @@ router.get('/', async (req, res) => {
                     WHERE cf."classRoomId" = "ClassRoom"."id"
                 )`), 'featureCount'], // Subquery para contar as características
             ],
-            order: [['id', 'ASC']], // Ordenar por ID em ordem ascendente (use 'DESC' para descendente)
+            offset,
+            limit: parseInt(pageSize, 10),
+            order: [['id', 'ASC']],
         });
 
-        // Renderizar a página com a lista de salas
-        res.render('layout', { content: 'rooms', classRooms });
+        res.json({
+            data: rows,
+            last_page: Math.ceil(count / pageSize),
+        });
     } catch (err) {
-        console.error('Erro ao buscar as salas:', err);
-        res.status(500).send('Erro ao buscar as salas.');
+        console.error('Erro ao buscar salas:', err);
+        res.status(500).send('Erro ao buscar salas.');
     }
 });
+
+
 
 
 

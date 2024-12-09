@@ -19,9 +19,6 @@ app.use(express.urlencoded({ extended: true }));
 // Middleware para JSON
 app.use(express.json());
 
-
-
-
 // Rota para o menu principal (home page)
 app.get('/', (req, res) => {
     res.render('layout', { content: 'dashboard' });
