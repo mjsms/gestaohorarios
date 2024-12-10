@@ -2,12 +2,14 @@ const express = require('express');
 
 const classroomRoutes = require('./routes/classRoomRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
+const authStudentRoutes = require('./routes/authStudentRoutes');
 
 const app = express();
 
 // Set up routes with specific base paths
 app.use('/classroom', classroomRoutes);
-app.use('/schedule', scheduleRoutes);~
+app.use('/schedule', scheduleRoutes);
+app.use('/auth', authStudentRoutes);
 
 
 // Definir o motor de templates como EJS

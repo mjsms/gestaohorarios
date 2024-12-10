@@ -1,7 +1,7 @@
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
-const {  models } = require('gestaohorarios-dal'); 
+const {  models } = require('gestaohorarios-models');
 
 const JWT_SECRET = 'some_random_key';
 
