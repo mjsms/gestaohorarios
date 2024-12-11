@@ -1,0 +1,61 @@
+<h3>Comparação de Versões</h3>
+<div id="slope-chart"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const groupedData = <%- JSON.stringify(groupedData) %>;
+        console.log("groupedData:", groupedData); // Debug
+
+        // Obter o primeiro ID de versão para extrair as chaves
+        const versionIds = Object.keys(groupedData);
+        const firstVersionId = versionIds[0];
+
+        // Obter as categorias (issueTypes) do primeiro objeto
+        const rawCategories = Object.keys(groupedData[firstVersionId].data);
+
+        // Opcional: Se quiser remover a categoria "null"
+        const filteredCategories = rawCategories.filter(cat => cat !== "null");
+
+        // Opcional: Mapeamento para nomes mais amigáveis no eixo X
+        const issueTypeMapping = {
+            "desadequado": "Salas Desadequadas",
+            "horário indesejado": "Horário Indesejado",
+            "sobrelotação": "Sobrelotação"
+            // "null": "Sem Tipo" caso queira manter, basta remover o filter acima
+        };
+
+        // Substituir as categorias pelos nomes amigáveis, se existirem no mapeamento
+        const categories = filteredCategories.map(cat => issueTypeMapping[cat] || cat);
+
+        // Construir as séries para o gráfico
+        const series = versionIds.map(versionId => {
+            const version = groupedData[versionId];
+            const qualityData = filteredCategories.map(cat => parseInt(version.data[cat]) || 0);
+            return {
+                name: version.description,
+                data: qualityData
+            };
+        });
+
+        console.log("series:", series); // Debug
+        console.log("categories:", categories); // Debug
+
+        const options = {
+            chart: {
+                type: 'line',
+                height: 400,
+            },
+            series: series,
+            xaxis: {
+                categories: categories
+            },
+            markers: {
+                size: 5
+            }
+        };
+
+        const chart = new ApexCharts(document.querySelector("#slope-chart"), options);
+        chart.render();
+    });
+</script>

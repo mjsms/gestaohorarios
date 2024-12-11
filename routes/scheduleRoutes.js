@@ -10,6 +10,42 @@ const e = require('connect-flash');
 const upload = multer({ storage: multer.memoryStorage() });
 
 
+router.get('/compare-versions', async (req, res) => {
+    const { ids } = req.query;
+    const versionIds = ids.split(',').map(Number);
+
+    if (versionIds.length < 2 || versionIds.length > 3) {
+        return res.status(400).send('Selecione entre 2 e 3 versões.');
+    }
+
+    const data = await sequelize.query(`
+        SELECT 
+            v.id AS version_id, 
+            v.description AS version_description, 
+            COUNT(q.id) AS quality_issues_count, 
+            q."issueType"
+        FROM "ScheduleVersion" v
+        JOIN "Schedule" s ON s."versionId" = v.id
+        LEFT JOIN "QualityIssue" q ON q."scheduleId" = s.id
+        WHERE v.id in(:ids)
+        GROUP BY v.id, v.description, q."issueType"
+        ORDER BY v.id, q."issueType";
+    `, {
+        replacements: { ids: versionIds }, // versionIds é um array de números
+        type: sequelize.QueryTypes.SELECT
+    });
+    
+
+    const groupedData = {};
+    data.forEach(row => {
+        if (!groupedData[row.version_id]) {
+            groupedData[row.version_id] = { description: row.version_description, data: {} };
+        }
+        groupedData[row.version_id].data[row.issueType] = row.quality_issues_count || 0;
+    });
+
+    res.render('layout', { content:'compare', groupedData });
+});
 // Fetch all schedule versions
 router.get('/json', async (req, res) => {
     try {
