@@ -27,7 +27,7 @@ exports.registerStudent = async (req, res) => {
             classGroupId: classGroup.id, // Usar a ID do grupo
         });
 
-        res.status(201).json({ success: true, student: newStudent });
+        res.status(201).json({ success: true, message: "Registo criado", student: newStudent });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Erro ao registrar o aluno." });
@@ -51,7 +51,7 @@ exports.loginStudent = async (req, res) => {
             return res.status(401).json({ success: false, message: "Credenciais inválidas." });
         }
 
-        res.status(200).json({ success: true, student });
+        res.status(200).json({ success: true, message: "Login efetuado", student });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Erro ao realizar login." });
