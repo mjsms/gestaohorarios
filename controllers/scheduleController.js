@@ -1,4 +1,4 @@
-const { models } = require('../db'); // Importa os modelos do banco de dados
+const { models, sequelize} = require('../db'); // Importa os modelos do banco de dados
 
 const uploadScheduleVersion = async (req, res) => {
     if (!req.file) {
