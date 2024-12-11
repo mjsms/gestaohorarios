@@ -3,7 +3,8 @@ const router = express.Router();
 const { models , sequelize} = require('../db');
 const { Op } = require('sequelize');
 const multer = require('multer');
-const { uploadScheduleVersion } = require('../controllers/scheduleController'); // Import the controller function
+const { uploadScheduleVersion } = require('../controllers/scheduleController');
+const { getScheduleByClassId } = require('../controllers/getScheduleController');// Import the controller function
 const e = require('connect-flash');
 
 // Set up multer for file uploads
@@ -174,82 +175,6 @@ router.get('/', async (req, res) => {
 });
 
 // Rota para buscar horários por turma (classGroupId)
-router.get('/classGroup/:classGroupId', async (req, res) => {
-    const { classGroupId } = req.params;
-
-    console.log(`Recebida requisição para horários do grupo de classe: ${classGroupId}`);
-
-    try {
-        const shifts = await models.Shift.findAll({
-            where: { classGroupId },
-            attributes: ['id'],
-        });
-
-        console.log(`Shifts encontrados: ${JSON.stringify(shifts)}`);
-
-        if (!shifts || shifts.length === 0) {
-            console.warn(`Nenhum turno encontrado para o grupo de classe: ${classGroupId}`);
-            return res.status(404).json({ success: false, message: 'Turnos não encontrados para o grupo de classe fornecido.' });
-        }
-
-        const shiftIds = shifts.map(shift => shift.id);
-
-        const schedules = await models.Schedule.findAll({
-            where: {
-                shiftId: shiftIds,
-                //date: {
-                 //   [models.Sequelize.Op.gte]: new Date(),
-                //},
-            },
-            attributes: ['id', 'date', 'startTime', 'endTime'],
-            include: [
-                {
-                    model: models.ClassRoom,
-                    as: 'classRoom',
-                    attributes: ['name'],
-                },
-                {
-                    model: models.Shift,
-                    as: 'shift',
-                    include: [
-                        {
-                            model: models.Subject,
-                            as: 'subject',
-                            attributes: ['name'],
-                        },
-                    ],
-                },
-            ],
-            order: [
-                ['date', 'ASC'],
-                ['startTime', 'ASC'],
-            ],
-        });
-
-        console.log(`Horários encontrados: ${JSON.stringify(schedules)}`);
-
-        if (!schedules || schedules.length === 0) {
-            console.warn('Nenhum horário encontrado.');
-            return res.status(404).json({ success: false, message: 'Horários não encontrados.' });
-        }
-
-        res.json({
-            success: true,
-            schedules: schedules.map(schedule => ({
-                id: schedule.id,
-                date: schedule.date.toISOString().split('T')[0],
-                startTime: schedule.startTime,
-                endTime: schedule.endTime,
-                classRoom: schedule.classRoom ? schedule.classRoom.name : 'Sala não disponível',
-                subject: schedule.shift && schedule.shift.subject ? schedule.shift.subject.name : 'Matéria não disponível',
-            })),
-        });
-    } catch (error) {
-        console.error('Erro ao buscar horários:', error);
-        res.status(500).json({ success: false, message: 'Erro ao buscar horários.' });
-    }
-});
-
-
+router.get('/classGroup/:classGroupId', getScheduleByClassId);
 
 module.exports = router;

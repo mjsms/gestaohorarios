@@ -3,6 +3,7 @@ const express = require('express');
 const classroomRoutes = require('./routes/classRoomRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const authStudentRoutes = require('./routes/authStudentRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.set('view engine', 'ejs');
 app.use('/classroom', classroomRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/auth', authStudentRoutes);
+app.use('/attendance', attendanceRoutes);
 
 // Rota para o menu principal (home page)
 app.get('/', (req, res) => {
