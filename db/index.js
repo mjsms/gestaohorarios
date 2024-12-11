@@ -1,4 +1,4 @@
-const { sequelize, ...models } = require('gestaohorarios-dal'); // Importa os modelos do pacote
+const { sequelize, ...models } = require('gestaohorarios-models'); // Importa os modelos do pacote
 
 (async () => {
     try {

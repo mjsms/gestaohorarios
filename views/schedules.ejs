@@ -1,21 +1,28 @@
 <!-- Button to open the modal for uploading schedules -->
 <a class="waves-effect waves-light btn modal-trigger" href="#uploadModal">Upload de Horários</a>
 
-<!-- Modal structure -->
+<!-- Estrutura do modal -->
 <div id="uploadModal" class="modal">
     <div class="modal-content">
-        <h4>Upload de Horários</h4>
+        <h4>Upload de Salas</h4>
         <form id="uploadHorariosForm" enctype="multipart/form-data">
+            <!-- Input for description -->
+            <div class="input-field" style="margin-top:40px;">
+                <label for="description">Descrição:</label>
+                <input type="text" id="description" name="description" placeholder="Adicione uma descrição" required>
+            </div>
+            <!-- Input for file upload -->
             <div class="file-field input-field">
                 <div class="btn">
-                    <span>Selecionar Ficheiro</span>
-                    <input type="file" id="horariosFile" name="file">
+                    <span>File</span>
+                    <input type="file" id="salasFile" name="file">
                 </div>
                 <div class="file-path-wrapper">
-                    <input class="file-path validate" type="text" placeholder="Selecione o ficheiro de horários (CSV)">
+                    <input class="file-path validate" type="text" placeholder="Selecione o ficheiro de salas (CSV)">
                 </div>
             </div>
-            <button type="submit" class="btn waves-effect waves-light">Upload Horários</button>
+            <!-- Submit button -->
+            <button type="submit" class="btn waves-effect waves-light">Upload Salas</button>
         </form>
         <!-- Spinner -->
         <div id="spinner" style="display: none; text-align: center; margin-top: 20px;">
@@ -46,28 +53,38 @@
     document.addEventListener('DOMContentLoaded', function () {
         var elems = document.querySelectorAll('.modal');
         M.Modal.init(elems);
-
-        // Fetch schedule versions and display in Tabulator
+        
         const table = new Tabulator("#versions-table", {
-            ajaxURL: "/schedule/json", // Endpoint to fetch schedule versions
-            ajaxConfig: "GET", // Request type
-            pagination: "remote", // Enable remote pagination
-            paginationSize: 10, // Rows per page
-            autoColumns: false, // Custom columns
+            ajaxURL: "/schedule/json", // URL para o endpoint de horários com paginação
+            ajaxParams: { page: 1, pageSize: 250 }, // Parâmetros iniciais
+            ajaxConfig: "GET", // Tipo de requisição
+            pagination: "remote", // Usar paginação remota
+            paginationSize: 250, // Tamanho da página
             layout: "fitColumns",
             columns: [
-                { title: "Versão", field: "id", sorter: "number" },
-                { title: "Data de Upload", field: "createdAt", sorter: "datetime", formatter: "datetime", formatterParams: { outputFormat: "DD/MM/YYYY HH:mm" } },
-                { title: "Descrição", field: "description", sorter: "string" },
-                { title: "Estado", field: "status", sorter: "string" },
                 { 
-                    title: "Ações", 
-                    formatter: function(cell, formatterParams) {
-                        const id = cell.getRow().getData().id;
-                        return `<a href="/schedule-version/${id}" class="btn-small waves-effect waves-light">Ver</a>`;
+                    title: "ID", 
+                    field: "id", 
+                    sorter: "number",
+                },
+                { 
+                    title: "Descrição", 
+                    field: "description", 
+                    sorter: "string",
+                    formatter: function(cell) {
+                        const id = cell.getRow().getData().id; // Get the ID from the row
+                        const description = cell.getValue();
+                        return `<a href="/schedule/${id}" class="btn-flat blue-text">${description}</a>`;
                     }
                 },
+                { title: "Atual", field: "isCurrent", sorter: "boolean", formatter: "tickCross" },
+                { title: "Estado", field: "status", sorter: "string" },
+                { title: "Criado em", field: "createdAt", sorter: "date" }
             ],
+            ajaxResponse: function(url, params, response) {
+                // Processa a resposta para extrair apenas os dados
+                return response.data; // Acesse o array de dados correto
+            },
         });
 
         // Handle the upload form submission
