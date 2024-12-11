@@ -96,43 +96,35 @@ router.get('/:versionId/json', async (req, res) => {
     }
     // Consulta para contar o total de registros
     const countQuery = `
-        WITH SchedulesWithIssues AS (
-            SELECT 
-                s.id,
-                (
-                    SELECT STRING_AGG(q."issueType", ', ')  
-                    FROM "QualityIssue" q 
-                    WHERE q."scheduleId" = s.id
-                )  AS "QualityIssues"
+        SELECT COUNT(*) AS total_count
+        FROM (
+            SELECT s.id
             FROM "Schedule" s
+            LEFT JOIN "QualityIssue" q ON q."scheduleId" = s.id
             WHERE s."versionId" = :versionId
-        )
-        SELECT COUNT(*) AS total
-        FROM SchedulesWithIssues
-        WHERE (:filterQualityIssues IS NULL OR "QualityIssues" IS NOT NULL);
+            GROUP BY s.id
+            HAVING (:filterQualityIssues = FALSE OR COUNT(q.id) > 0)
+        ) AS filtered_schedules;
     `;
     
     // Consulta para buscar registros com paginação
-    const dataQuery = `
-        WITH SchedulesWithIssues AS (
+        const dataQuery = `
             SELECT 
                 s.id,
                 s.date,
                 s."startTime",
                 s."endTime",
-                (
-                    SELECT STRING_AGG(q."issueType", ', ')  
-                    FROM "QualityIssue" q 
-                    WHERE q."scheduleId" = s.id
-                )  AS "QualityIssues"
+                sh.name as "shiftName",
+                c.name as "classRoomName",
+                STRING_AGG(q."issueType", ', ') AS "QualityIssues"
             FROM "Schedule" s
+            LEFT JOIN "Shift" sh on sh.id = s."shiftId"
+            LEFT JOIN "ClassRoom" c on c.id = s."classRoomId"
+            LEFT JOIN "QualityIssue" q ON q."scheduleId" = s.id
             WHERE s."versionId" = :versionId
-        )
-        SELECT *
-        FROM SchedulesWithIssues
-        WHERE (:filterQualityIssues IS NULL OR "QualityIssues" IS NOT NULL)
-
-        LIMIT :pageSize OFFSET :offset;
+            GROUP BY s.id, s.date, s."startTime", s."endTime",sh.name,c.name
+            HAVING (:filterQualityIssues = FALSE OR COUNT(q.id) > 0)
+            LIMIT :pageSize OFFSET :offset;
     `;
     
     const replacements = {
@@ -147,7 +139,7 @@ router.get('/:versionId/json', async (req, res) => {
     try {
         // Executar a consulta de contagem
         const [countResults] = await sequelize.query(countQuery, { replacements });
-        const total = parseInt(countResults[0].total, 10);
+        const total = parseInt(countResults[0].total_count, 10);
     
         // Executar a consulta de dados
         const [dataResults] = await sequelize.query(dataQuery, { replacements });
