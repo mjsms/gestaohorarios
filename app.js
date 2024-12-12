@@ -4,6 +4,7 @@ const classroomRoutes = require('./routes/classRoomRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const authStudentRoutes = require('./routes/authStudentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const scannerRoutes = require('./routes/scannerRoutes');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/classroom', classroomRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/auth', authStudentRoutes);
 app.use('/attendance', attendanceRoutes);
+app.use('/', scannerRoutes);
 
 // Rota para o menu principal (home page)
 app.get('/', (req, res) => {
