@@ -3,20 +3,34 @@ const router = express.Router();
 const { models , sequelize} = require('../db');
 
 router.post('/', async (req, res) => {
-    const { scheduleId, userId, isAttending } = req.body;
+    const { scheduleId, userId:studentId, isAttending } = req.body;
+
+    console.log('Dados recebidos:', req.body);
+
+    if (!scheduleId || !studentId || isAttending === undefined) {
+        return res.status(400).json({ success: false, message: 'Dados incompletos.' });
+    }
 
     try {
-        const [attendance, created] = await models.ScheduleAttendance.findOrCreate({
-            where: { scheduleId, userId },
-            defaults: { isAttending },
+        // Tenta encontrar ou criar um registro de presença
+        const [attendance] = await models.ScheduleAttendance.findOrCreate({
+            where: {
+                scheduleId: scheduleId,
+                studentId: studentId, // Corrigido para usar "studentId"
+            },
+            defaults: {
+                isAttending: isAttending,
+            },
         });
 
-        if (!created) {
+        // Atualiza o valor de isAttending se o registro já existir
+        if (!attendance.isNewRecord) {
+            console.log('Atualizando registro existente:', attendance);
             attendance.isAttending = isAttending;
             await attendance.save();
         }
 
-        res.status(200).json({ success: true, message: 'Presença atualizada com sucesso.' });
+        res.json({ success: true, message: 'Presença atualizada com sucesso.' });
     } catch (error) {
         console.error('Erro ao atualizar presença:', error);
         res.status(500).json({ success: false, message: 'Erro ao atualizar presença.' });

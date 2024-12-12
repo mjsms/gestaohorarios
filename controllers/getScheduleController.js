@@ -15,6 +15,10 @@ const getScheduleByClassId = async (req, res) => {
         LEFT JOIN "Shift" sh ON s."shiftId" = sh.id
         LEFT JOIN "Subject" sub ON sh."subjectId" = sub.id
         WHERE sh."classGroupId" = :classGroupId
+        AND s."versionId" = (
+            SELECT MAX(sv.id)
+            FROM "ScheduleVersion" sv
+        )
         ORDER BY s.date ASC, s."startTime" ASC;
     `;
 
