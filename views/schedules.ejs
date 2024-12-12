@@ -88,8 +88,49 @@
                     }
                 },
                 { title: "Atual", field: "isCurrent", sorter: "boolean", formatter: "tickCross" },
-                { title: "Estado", field: "status", sorter: "string" },
-                { title: "Criado em", field: "createdAt", sorter: "date" }
+                {
+                    title: "Estado", 
+                    field: "status", 
+                    sorter: "string",
+                    formatter: function(cell) {
+                        const value = cell.getValue();
+                        if (value === 'pending') {
+                            return 'Pendente';
+                        } else if (value === 'processed') {
+                            return 'Processado';
+                        } else if (value === 'error') {
+                            return 'Erro';
+                        } else {
+                            return value; // Caso haja outros estados, exibe o valor original
+                        }
+                    }
+                },
+                { title: "Criado em", field: "createdAt", sorter: "date" },
+                { 
+                    title: "Ações", 
+                    field: "id",
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const id = cell.getValue();
+                        return `<button class="btn waves-effect waves-light mark-current-btn" data-id="${id}">Marcar como Atual</button>`;
+                    },
+                    cellClick: function(e, cell) {
+                        const id = cell.getValue();
+                        fetch(`/schedule/mark-current/${id}`, {
+                            method: 'POST',
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            M.toast({html: data.message, classes:'green'});
+                            // Recarregar a tabela para refletir a mudança
+                            table.setData();
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            M.toast({html: 'Erro ao marcar como atual', classes:'red'});
+                        });
+                    }
+                }
             ],
             ajaxResponse: function(url, params, response) {
                 // Processa a resposta para extrair apenas os dados

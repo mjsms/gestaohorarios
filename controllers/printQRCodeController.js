@@ -1,23 +1,30 @@
+
 const path = require('path');
 const QRCode = require('qrcode');
 const { models } = require('../db');
+const qrCodeDir = path.join(__dirname, '..', 'qrcodes');
+const fs = require('fs');
+
 
 // Gera o QR Code para uma sala específica
 exports.generateQrCodeImage = async (req, res) => {
     try {
         const classRoomId = req.params.classRoomId;
-        const classRoom = await models.ClassRoom.findByPk(classRoomId);
+        const qrCodeDir = path.join(__dirname, '..', 'qrcodes');
 
-        if (!classRoom) {
+        if (!classRoomId) {
             return res.status(404).json({ success: false, message: "Sala não encontrada." });
         }
 
         // Conteúdo do QR Code (ID ou nome da sala)
-        const qrContent = `sala_${classRoom.id}`; // Use o ID da sala ou qualquer valor único
+        const qrContent = `sala_${classRoomId}`; // Use o ID da sala ou qualquer valor único
 
         // Caminho do arquivo para salvar o QR Code
-        const qrCodePath = path.join(__dirname, '..', 'qrcodes', `classroom_${classRoom.id}.png`);
+        const qrCodePath = path.join(qrCodeDir, `classroom_${classRoomId}.png`);
 
+        if (!fs.existsSync(qrCodeDir)) {             
+            fs.mkdirSync(qrCodeDir, { recursive: true });         
+        }
         // Gerar QR Code com o conteúdo
         await QRCode.toFile(qrCodePath, qrContent);
 

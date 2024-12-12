@@ -12,6 +12,10 @@
         <input type="number" id="capacity" name="capacity" value="<%= classRoom.capacity %>" min="1" required>
     </div>
 
+    <div>
+        <img id="qrcode" name="qrcode" src="/qrcode/<%= classRoom.id %>" alt="" style="width: 200px;">
+    </div>
+
     <!-- Lista de características -->
     <h3>Características:</h3>
     <div class="feature-grid">
