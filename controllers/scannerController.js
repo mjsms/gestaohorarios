@@ -1,42 +1,38 @@
 const QRCode = require('qrcode'); // Biblioteca para gerar QR Codes
 const { models } = require('../db'); // Importa os modelos do banco de dados
 
-// Gera e associa QR Codes às salas
-exports.generateQrCodesForClassrooms = async (req, res) => {
+exports.getClassroomName = async (req, res) => {
     try {
-        // Busca todas as salas
-        const classRooms = await models.ClassRoom.findAll();
+        const { id } = req.params;
+        console.log('input:', id);
 
-        // Itera por todas as salas
-        for (const room of classRooms) {
-            // Define o conteúdo do QR Code (URL ou ID)
-            const qrContent = `https://example.com/classrooms/${room.id}`;
+        // Busca a sala pelo ID
+        const classRoom = await models.ClassRoom.findByPk(id);
 
-            // Gera o QR Code em Base64
-            const qrCode = await QRCode.toDataURL(qrContent);
-
-            // Atualiza a sala com o QR Code gerado
-            await room.update({ qrCode: qrCode });
+        if (!classRoom) {
+            return res.status(404).json({
+                success: false,
+                message: 'Id inválido. Sala não encontrada.',
+            });
         }
 
-        res.status(200).json({ success: true, message: 'QR Codes gerados com sucesso.' });
-    } catch (error) {
-        console.error('Erro ao gerar QR Codes:', error);
-        res.status(500).json({ success: false, message: 'Erro ao gerar QR Codes.' });
-    }
-};
-
-// Busca todas as salas com QR Codes
-exports.getClassroomsWithQrCodes = async (req, res) => {
-    try {
-        const classRooms = await models.ClassRoom.findAll({
-            attributes: ['id', 'name', 'qrCode'], // Seleciona os campos necessários
+        // Retorna o nome da sala relacionado ao QR Code
+        return res.status(200).json({
+            success: true,
+            message: 'Sala válida.',
+            classRoom: {
+                id: classRoom.id,
+                name: classRoom.name,
+            },
         });
+    } catch (err) {
+        console.error('Erro ao processar id da sala:', err);
 
-        res.status(200).json({ success: true, data: classRooms });
-    } catch (error) {
-        console.error('Erro ao buscar salas:', error);
-        res.status(500).json({ success: false, message: 'Erro ao buscar salas.' });
+        // Retorna uma resposta de erro genérica
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao processar id da sala.',
+        });
     }
 };
 

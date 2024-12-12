@@ -32,5 +32,4 @@ app.get('/', (req, res) => {
 // Servidor
 app.listen(3000, () => {
     console.log('Servidor a correr na porta 3000');
-}); 
-
+});
