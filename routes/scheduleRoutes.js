@@ -10,7 +10,17 @@ const e = require('connect-flash');
 // Set up multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
-
+router.post('/mark-current/:id', async (req, res) => {
+    const { id } = req.params;
+    // Lógica para marcar a versão 'id' como atual
+    // Por exemplo:
+    await models.ScheduleVersion.update({ isCurrent: true }, { where: { id } });
+    // Garantir que as outras versões não sejam marcadas como atual:
+    await models.ScheduleVersion.update({ isCurrent: false }, { where: { id: { [Op.ne]: id } } });
+  
+    return res.json({ message: 'Versão marcada como atual com sucesso!' });
+});
+  
 router.get('/compare-versions', async (req, res) => {
     const { ids } = req.query;
     const versionIds = ids.split(',').map(Number);

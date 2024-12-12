@@ -1,7 +1,17 @@
-<div class="container">
+<div class="">
     <h3>Detalhes do Horário</h3>
     <p><strong>Descrição:</strong> <%= scheduleVersion.description %></p>
-    <p><strong>Estado:</strong> <%= scheduleVersion.status %></p>
+    <p><strong>Estado:</strong> 
+        <% if (scheduleVersion.status === 'pending') { %>
+            Pendente
+        <% } else if (scheduleVersion.status === 'processed') { %>
+            Processado
+       <% } else if (scheduleVersion.status === 'error') { %>
+            Erro
+        <% } else { %>
+            <%= scheduleVersion.status %>
+        <% } %>
+    </p>
     <p><strong>Criado em:</strong> <%= scheduleVersion.createdAt %></p>
 
     <!-- Filtro por Qualidade -->
