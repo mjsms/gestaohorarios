@@ -8,9 +8,9 @@ const { uploadClassRooms } = require('../controllers/classRoomController');
 const { models, sequelize } = require('../db'); 
 const router = express.Router();
 const { Op } = require('sequelize');
+
 // Rota para upload de salas
 router.post('/upload/', upload.single('file'), uploadClassRooms);
-
 
 router.get('/', async (req, res) => {
     try {
@@ -20,7 +20,6 @@ router.get('/', async (req, res) => {
         res.status(500).send('Erro ao carregar a página.');
     }
 });
-
 
 router.get('/json', async (req, res) => {
     try {
@@ -59,10 +58,6 @@ router.get('/json', async (req, res) => {
         res.status(500).send('Erro ao buscar salas.');
     }
 });
-
-
-
-
 
 router.get('/:id', async (req, res) => {
     try {
@@ -108,5 +103,38 @@ router.post('/:id', async (req, res) => {
     }
 });
 
+router.get('/qrcode/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Busca a sala pelo ID
+        const classRoom = await models.ClassRoom.findByPk(id);
+
+        if (!classRoom) {
+            return res.status(404).json({
+                success: false,
+                message: 'Id inválido. Sala não encontrada.',
+            });
+        }
+
+        // Retorna o nome da sala relacionado ao QR Code
+        return res.status(200).json({
+            success: true,
+            message: 'Sala válida.',
+            classRoom: {
+                id: classRoom.id,
+                name: classRoom.name,
+            },
+        });
+    } catch (err) {
+        console.error('Erro ao processar id da sala:', err);
+
+        // Retorna uma resposta de erro genérica
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao processar id da sala.',
+        });
+    }
+});
 
 module.exports = router;

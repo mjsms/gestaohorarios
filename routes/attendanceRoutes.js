@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { models , sequelize} = require('../db');
+const presenceController = require('../controllers/presenceController');
 
 router.post('/', async (req, res) => {
     const { scheduleId, userId:studentId, isAttending } = req.body;
@@ -16,7 +17,7 @@ router.post('/', async (req, res) => {
         const [attendance] = await models.ScheduleAttendance.findOrCreate({
             where: {
                 scheduleId: scheduleId,
-                studentId: studentId, // Corrigido para usar "studentId"
+                studentId: studentId,
             },
             defaults: {
                 isAttending: isAttending,
@@ -36,5 +37,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ success: false, message: 'Erro ao atualizar presença.' });
     }
 });
+
+router.post('/mark-presence', presenceController.markAttendance);
 
 module.exports = router;

@@ -22,7 +22,7 @@ app.use('/classroom', classroomRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/auth', authStudentRoutes);
 app.use('/attendance', attendanceRoutes);
-app.use('/', scannerRoutes);
+app.use('/qrcode', scannerRoutes);
 
 // Rota para o menu principal (home page)
 app.get('/', (req, res) => {

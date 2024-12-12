@@ -40,24 +40,3 @@ exports.getClassroomsWithQrCodes = async (req, res) => {
     }
 };
 
-exports.validateQrCode = async (req, res) => {
-    const { roomId } = req.body;
-
-    if (!roomId) {
-        return res.status(400).json({ success: false, message: "Room ID é obrigatório." });
-    }
-
-    try {
-        const room = await models.ClassRoom.findByPk(roomId);
-
-        if (!room) {
-            return res.status(404).json({ success: false, message: "Sala não encontrada." });
-        }
-
-        return res.status(200).json({ success: true, message: "QR Code validado." });
-    } catch (error) {
-        console.error("Erro ao validar QR Code:", error);
-        res.status(500).json({ success: false, message: "Erro ao validar QR Code." });
-    }
-};
-

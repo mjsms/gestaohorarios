@@ -19,6 +19,7 @@ const getScheduleByClassId = async (req, res) => {
             SELECT MAX(sv.id)
             FROM "ScheduleVersion" sv
         )
+        AND s.date >= CURRENT_DATE
         ORDER BY s.date ASC, s."startTime" ASC;
     `;
 
