@@ -1,4 +1,4 @@
-const { models, sequelize} = require('../db');
+const { models, sequelize } = require('../db');
 
 const getScheduleByClassId = async (req, res) => {
     const { classGroupId } = req.params;
@@ -14,11 +14,9 @@ const getScheduleByClassId = async (req, res) => {
         LEFT JOIN "ClassRoom" cr ON s."classRoomId" = cr.id
         LEFT JOIN "Shift" sh ON s."shiftId" = sh.id
         LEFT JOIN "Subject" sub ON sh."subjectId" = sub.id
+        LEFT JOIN "ScheduleVersion" sv ON s."versionId" = sv.id
         WHERE sh."classGroupId" = :classGroupId
-        AND s."versionId" = (
-            SELECT MAX(sv.id)
-            FROM "ScheduleVersion" sv
-        )
+        AND sv."isCurrent" = TRUE
         AND s.date >= CURRENT_DATE
         ORDER BY s.date ASC, s."startTime" ASC;
     `;
@@ -29,11 +27,16 @@ const getScheduleByClassId = async (req, res) => {
             replacements: { classGroupId },
         });
 
+        // Verifica se não há horários encontrados
         if (!schedules || schedules.length === 0) {
             console.warn(`Nenhum horário encontrado para o grupo de classe: ${classGroupId}`);
-            return res.status(404).json({ success: false, message: 'Horários não encontrados para o grupo de classe fornecido.' });
+            return res.status(404).json({
+                success: false,
+                message: 'Nenhum horário disponível para o grupo de classe fornecido.'
+            });
         }
 
+        // Retorna os horários encontrados
         res.json({
             success: true,
             schedules: schedules.map(schedule => ({
@@ -46,8 +49,12 @@ const getScheduleByClassId = async (req, res) => {
             })),
         });
     } catch (error) {
+        // Trata erros na execução da query
         console.error('Erro ao buscar horários:', error);
-        res.status(500).json({ success: false, message: 'Erro ao buscar horários.' });
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar horários. Por favor, tente novamente mais tarde.'
+        });
     }
 };
 
