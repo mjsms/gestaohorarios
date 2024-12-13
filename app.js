@@ -38,7 +38,7 @@ app.post('/login', async (req, res) => {
     // Pesquisar o utilizador na base de dados
     const user = await models.User.findOne({ where: { username } });
     
-    if (!user.password) {
+    if (!user) {
         // Se não encontrou o utilizador
         return res.render('login', { errorMessage: 'Credenciais inválidas' });
     }
@@ -57,7 +57,7 @@ app.post('/login', async (req, res) => {
 
 // Set up routes with specific base paths
 app.use('/classroom', requireAuth, classroomRoutes);
-app.use('/schedule', requireAuth, scheduleRoutes);
+app.use('/schedule', scheduleRoutes);
 app.use('/auth', authStudentRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/qrcode', scannerRoutes);
