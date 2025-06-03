@@ -1,0 +1,22 @@
+<h4>Histórico de Execuções</h4>
+
+<a href="#" class="btn blue">Gerar Horário (placeholder)</a>
+
+<table class="striped">
+  <thead>
+    <tr>
+      <th>ID</th><th>Data</th><th>Algoritmo</th><th># Sol.</th><th>HV</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% runs.forEach(r => { %>
+    <tr>
+      <td><a href="/algorithm/<%= r.id %>"><%= r.id %></a></td>
+      <td><%= r.date %></td>
+      <td><%= r.algorithm %></td>
+      <td><%= r.count %></td>
+      <td><%= r.hv %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>

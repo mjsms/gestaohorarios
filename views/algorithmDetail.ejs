@@ -1,0 +1,35 @@
+<h4>Execução #<%= run.id %> · <%= run.algorithm %></h4>
+<p>Hyper-Volume: <%= run.hv %></p>
+
+<div class="grey lighten-3 center" style="height:180px; line-height:180px;">
+  (gráfico Pareto aqui)
+</div>
+
+<table class="striped">
+  <thead>
+    <tr><th>Sel</th><th>ID</th><th>Conflicts</th><th>Utilização</th><th>Gaps</th></tr>
+  </thead>
+  <tbody>
+  <% sols.forEach(s => { %>
+    <tr>
+      <td><input type="checkbox" value="<%= s.id %>"></td>
+      <td><a href="/schedule/<%= s.versionId %>"><%= s.label %></a></td>
+      <td><%= s.conflicts %></td>
+      <td><%= s.util %> %</td>
+      <td><%= s.gaps %> h</td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+
+<a id="btn-compare" class="btn green disabled">Comparar</a>
+
+<script>
+  const chk = document.querySelectorAll('tbody input[type="checkbox"]');
+  const btn = document.getElementById('btn-compare');
+  chk.forEach(c => c.addEventListener('change', ()=>{
+    const sel=[...chk].filter(x=>x.checked).map(x=>x.value);
+    btn.classList.toggle('disabled', sel.length<2);
+    btn.href = `/algorithm/<%= run.id %>/compare?ids=`+sel.join(',');
+  }));
+</script>

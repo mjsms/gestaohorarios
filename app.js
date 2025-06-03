@@ -5,7 +5,9 @@ const classroomRoutes = require('./routes/classRoomRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const authStudentRoutes = require('./routes/authStudentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const algorithmRoutes = require('./routes/algorithmRoutes');
 const scannerRoutes = require('./routes/scannerRoutes');
+const heatmapRoutes = require('./routes/heatmapRoutes');
 const bcrypt = require('bcryptjs');
 const { models } = require('./db');
 const requireAuth = require('./middleware/auth'); 
@@ -60,13 +62,14 @@ app.use('/classroom', requireAuth, classroomRoutes);
 app.use('/schedule', scheduleRoutes);
 app.use('/auth', authStudentRoutes);
 app.use('/attendance', attendanceRoutes);
+app.use('/algorithm', algorithmRoutes);
 app.use('/qrcode', scannerRoutes);
+app.use('/heatmap', heatmapRoutes);
 
 // Rota para o menu principal (home page)
 app.get('/', requireAuth, (req, res) => {
     res.render('layout', { content: 'dashboard' });
 });
-
 
 // Servidor
 app.listen(3000, () => {
