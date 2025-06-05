@@ -8,6 +8,9 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const algorithmRoutes = require('./routes/algorithmRoutes');
 const scannerRoutes = require('./routes/scannerRoutes');
 const heatmapRoutes = require('./routes/heatmapRoutes');
+const shiftRoutes = require('./routes/shiftRoutes');
+const icalRoutes = require('./routes/icalRoutes');
+
 const bcrypt = require('bcryptjs');
 const { models } = require('./db');
 const requireAuth = require('./middleware/auth'); 
@@ -65,6 +68,8 @@ app.use('/attendance', attendanceRoutes);
 app.use('/algorithm', algorithmRoutes);
 app.use('/qrcode', scannerRoutes);
 app.use('/heatmap', heatmapRoutes);
+app.use('/ical', icalRoutes);
+app.use('/shift', shiftRoutes);
 
 // Rota para o menu principal (home page)
 app.get('/', requireAuth, (req, res) => {
