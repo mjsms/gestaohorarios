@@ -170,11 +170,6 @@ exports.generate = async (req, res, next) => {
       }));
       await models.Allocation.bulkCreate(allocRows, { transaction: t });
     }
-    const hvFinal = apiResp.data.pareto.length
-      ? apiResp.data.pareto[0].metrics.hv   // se enviares hv por solução
-      : 0;
-
-    run.hv = hvFinal;
     await run.save({ transaction: t });
     await t.commit();
     return res.redirect(`/algorithm/${run.id}`);
