@@ -1,96 +1,188 @@
 // const axios = require("axios");
-// const timetableService = require("../services/timetableService");
 // controllers/algorithmController.js
 const axios = require('axios');
+const timetableService = require("../services/timetableServices");
+const { models, sequelize } = require('../db');
 
-exports.list = async (req, res) => {
-  // Placeholder: sem BD ainda
-  const runs = [
-    { id: 1, date: "2024-12-01 14:30", algorithm: "NSGA-II", hv: 0.78, count: 12 },
-  ];
-
-  res.render("layout", {
-    content: "algorithm",     // ← ficheiro views/algorithm.ejs
-    runs,
-  });
-};
-
-exports.detail = async (req, res) => {
-  const runId = req.params.id;
-
-  const run  = { id: runId, algorithm: "NSGA-II", hv: 0.78 };
-  const sols = [
-    { id: "A", label: "Sol A", conflicts: 0, util: 83, gaps: 3, versionId: 10 },
-    { id: "B", label: "Sol B", conflicts: 0, util: 80, gaps: 2, versionId: 11 },
-  ];
-
-  res.render("layout", {
-    content: "algorithmDetail",   // views/algorithmDetail.ejs
-    run,
-    sols,
-  });
-};
-
-exports.compare = async (req, res) => {
-  res.render("layout", {
-    content: "algorithmCompare",  // views/algorithmCompare.ejs
-    runId: req.params.id,
-    solIds: (req.query.ids || "").split(","),
-  });
-};
-
-
-
-// ──────────────────────────────────────────────────────────────
-// NOVO  ▶  Gera horário
-// ──────────────────────────────────────────────────────────────
-exports.generate = async (req, res, next) => {
+// controllers/algorithmController.js
+exports.list = async (req, res, next) => {
   try {
-    // 1) ---- construir payload -------------------------------
-    // Por agora hard-code. Depois troca por queries à tua BD.
-    const buildPayload = () => {
-      const starts  = ['08:00','09:30','11:00','14:00','15:30','17:00'];
-      const BLOCK   = 1.5;          // horas p/ bloco
-      const classes = [             // EXEMPLO mínimo
-        { id: 1, name: 'Turma A', size: 30, year: 1, duration: 2, reqFeatures: [] },
-        { id: 2, name: 'Turma B', size: 25, year: 2, duration: 1, reqFeatures: [] }
-      ];
-      const slots   = [];
-      let id = 0;
-      for (let wd = 0; wd < 5; wd++) {
-        starts.forEach(st => {
-          const [h,m] = st.split(':').map(Number);
-          const end   = new Date(0,0,0,h,m + BLOCK*60)
-                           .toTimeString().slice(0,5);
-          slots.push({ id: id++, weekday: wd, start: st, end });
-        });
-      }
-      const rooms = [
-        { id: 1, name: 'Sala 1', capacity: 40, features: [] },
-        { id: 2, name: 'Sala 2', capacity: 25, features: [] }
-      ];
-      return { classes, slots, rooms };
-    };
+    const runs = await models.AlgorithmRun.findAll({
+      // ① campos base
+      attributes: [
+        'id',
+        'algorithm',
+        'hv',
+        // ② data legível (PostgreSQL)
+        [sequelize.fn(
+          'to_char',
+          sequelize.col('started_at'),
+          'YYYY-MM-DD HH24:MI'
+        ), 'date'],
+        // ③ nº de soluções (sub-query COUNT)
+        [sequelize.literal(`(
+          SELECT COUNT(*) FROM "Solution" s
+          WHERE s.run_id = "AlgorithmRun"."id"
+        )`), 'solCnt']
+      ],
+      order:[['started_at','DESC']]
+    });
 
-    const payload = buildPayload();
+    res.render('layout', { content:'algorithm', runs });
 
-    // 2) ---- chamar API Python -------------------------------
-    const { data } = await axios.post(
-      'http://localhost:8000/optimise',
-      { data: payload },
-      { timeout: 120000 }
-    );
+  } catch (err) { next(err); }
+};
 
-    // 3) ---- gravar na BD (placeholder) ----------------------
-    // const run = await AlgorithmRun.create({ … });
-    // await Promise.all(data.pareto.map(sol => Solution.create({ … })));
 
-    // 4) ---- redireccionar para detalhe ----------------------
-    // res.redirect(`/algorithm/${run.id}`);
-    // Como não tens BD ainda, só mostra resultado bruto:
-    res.json(data);
+
+exports.detail = async (req, res, next) => {
+  const run = await models.AlgorithmRun.findByPk(req.params.id, {
+    include: [{ model: models.Solution, as: 'solutions' }],
+    order:   [[{model: models.Solution, as:'solutions'}, 'conflicts', 'ASC']]
+  });
+
+  if(!run) return next(); // 404
+
+  res.render('layout', {
+    content : 'algorithmDetail',
+    run,
+    sols    : run.solutions
+  });
+};
+
+
+// controllers/algorithmController.js
+exports.compare = async (req, res, next) => {
+  try {
+    /* ------------------------------------------------------------------
+       1) validar parâmetros
+    ------------------------------------------------------------------ */
+    const runId  = Number(req.params.id);
+    const solIds = (req.query.ids || '')
+                     .split(',')
+                     .map(id => Number(id))
+                     .filter(Boolean);
+
+    if (solIds.length < 2) {
+      // se o utilizador não escolheu pelo menos 2, volta ao detalhe
+      return res.redirect(`/algorithm/${runId}`);
+    }
+
+    /* ------------------------------------------------------------------
+       2) buscar soluções + alocações
+         – garante que pertencem TODAS à mesma run
+         – traz as alocações já para a comparação/heat-map
+    ------------------------------------------------------------------ */
+    const sols = await models.Solution.findAll({
+      where: { id: solIds, run_id: runId },
+      include: [{
+        model: Allocation,
+        as:    'allocations',
+        attributes: ['class_id', 'slot_id', 'room_id']
+      }],
+      order: [['external_id', 'ASC']]
+    });
+
+    if (sols.length !== solIds.length) {
+      // algum ID não existia ou pertencia a outra run → 404
+      return next();               // usa o teu handler de 404
+    }
+
+    /* ------------------------------------------------------------------
+       3) pré-processar para a view (ex.: matriz de comparação)
+         – aqui só um exemplo simples
+    ------------------------------------------------------------------ */
+    const compMatrix = {};
+    sols.forEach(sol => {
+      sol.allocations.forEach(a => {
+        const key = `${a.class_id}|${a.slot_id}`;   // um ponto da grade
+        if (!compMatrix[key]) compMatrix[key] = {};
+        compMatrix[key][sol.id] = a.room_id;       // sala que cada sol usa
+      });
+    });
+    // agora compMatrix["123|7"] -> { 12: 4, 13: 6, … }
+
+    /* ------------------------------------------------------------------
+       4) render
+    ------------------------------------------------------------------ */
+    res.render('layout', {
+      content: 'algorithmCompare',   // views/algorithmCompare.ejs
+      runId,
+      sols,                          // lista de modelos Solution
+      compMatrix                     // estrutura pronta p/ heat-map
+    });
 
   } catch (err) {
+    next(err);
+  }
+};
+
+
+
+
+exports.generate = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  try {
+    /* 1) payload -------------------------------------------------------- */
+    const payload    = await timetableService.buildPayload();
+    const { classes, slots, rooms } = payload;   // ← rooms passa a existir aqui
+
+    /* 2) chama a API ---------------------------------------------------- */
+    const startedAt  = new Date();
+    const apiResp    = await axios.post(
+      process.env.OPTIMISER_URL || "http://localhost:8000/optimise",
+      { data: payload, pop_size: 400, n_gen: 3 },
+      { timeout: 9999999 }
+    );
+    const finishedAt = new Date();
+
+    /* 3) persiste a run ------------------------------------------------- */
+    const run = await models.AlgorithmRun.create({
+      algorithm:  "NSGA-II",
+      pop_size:   400,
+      n_gen:      200,
+      hv:         0,          
+      started_at: startedAt,
+      finished_at: finishedAt
+    }, { transaction: t });
+
+    /* 4) persiste cada solução + alocações ----------------------------- */
+    for (const sol of apiResp.data.pareto) {
+      // calcular já a utilização (simples: 1 - waste / capacidade_total)
+      const totalCapacity = rooms.reduce((s,r)=>s+r.capacity,0) * slots.length;
+      const utilisation   = 100 * (1 - sol.metrics.waste / totalCapacity);
+
+      const solRow = await models.Solution.create({
+        run_id:      run.id,
+        external_id: sol.id,
+        conflicts:   sol.metrics.conflicts,
+        waste:       sol.metrics.waste,
+        utilisation: utilisation.toFixed(2),
+        gaps:        0               // ← por enquanto; 
+    }, { transaction: t });
+
+      // bulk insert das alocações
+      const allocRows = sol.allocation.map(a => ({
+        solution_id: solRow.id,
+        class_id:    a.class_id,
+        slot_id:     a.slot_id,
+        room_id:     a.room_id
+      }));
+      await models.Allocation.bulkCreate(allocRows, { transaction: t });
+    }
+    const hvFinal = apiResp.data.pareto.length
+      ? apiResp.data.pareto[0].metrics.hv   // se enviares hv por solução
+      : 0;
+
+    run.hv = hvFinal;
+    await run.save({ transaction: t });
+    await t.commit();
+    return res.redirect(`/algorithm/${run.id}`);
+
+  } catch (err) {
+    console.error('SQL:', err.parent?.sql);
+    console.error('DETAIL:', err.parent?.detail);
+    await t.rollback();
     next(err);
   }
 };

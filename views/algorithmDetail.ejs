@@ -2,7 +2,39 @@
 <p>Hyper-Volume: <%= run.hv %></p>
 
 <div class="grey lighten-3 center" style="height:180px; line-height:180px;">
-  (gráfico Pareto aqui)
+<div>
+  <canvas id="paretoChart" height="180"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const pareto = <%- JSON.stringify(
+  sols.map(s => ({
+    x: s.conflicts,
+    y: s.waste,
+    label: 'Sol ' + s.external_id
+  }))
+) %>;
+
+new Chart(document.getElementById('paretoChart'), {
+  type:'scatter',
+  data:{ datasets:[{
+    data: pareto,
+    pointRadius:4,
+    backgroundColor:'steelblue'
+  }]},
+  options:{
+    plugins:{ tooltip:{ callbacks:{
+      label: ctx => `${ctx.raw.label} → (${ctx.raw.x}, ${ctx.raw.y})`
+    }}},
+    scales:{
+      x:{ title:{ display:true, text:'Conflicts ↓' } },
+      y:{ title:{ display:true, text:'Waste ↓' } }
+    }
+  }
+});
+</script>
+
 </div>
 
 <table class="striped">
@@ -13,9 +45,9 @@
   <% sols.forEach(s => { %>
     <tr>
       <td><input type="checkbox" value="<%= s.id %>"></td>
-      <td><a href="/schedule/<%= s.versionId %>"><%= s.label %></a></td>
+      <td><a href="/schedule/<%= s.id %>">Sol <%= s.external_id %></a></td>
       <td><%= s.conflicts %></td>
-      <td><%= s.util %> %</td>
+      <td><%= s.utilisation %> %</td>   <!-- já não é NaN -->
       <td><%= s.gaps %> h</td>
     </tr>
   <% }) %>
@@ -25,11 +57,13 @@
 <a id="btn-compare" class="btn green disabled">Comparar</a>
 
 <script>
-  const chk = document.querySelectorAll('tbody input[type="checkbox"]');
-  const btn = document.getElementById('btn-compare');
-  chk.forEach(c => c.addEventListener('change', ()=>{
-    const sel=[...chk].filter(x=>x.checked).map(x=>x.value);
-    btn.classList.toggle('disabled', sel.length<2);
-    btn.href = `/algorithm/<%= run.id %>/compare?ids=`+sel.join(',');
-  }));
+const chk = document.querySelectorAll('tbody input[type=checkbox]');
+chk.forEach(c=>{
+  c.addEventListener('change',()=>{
+    const ids = [...chk].filter(x=>x.checked).map(x=>x.value);
+    btn.classList.toggle('disabled', ids.length<2);
+    btn.href = `/algorithm/<%= run.id %>/compare?ids=`+ids.join(',');
+  });
+});
+
 </script>

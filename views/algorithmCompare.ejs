@@ -1,16 +1,44 @@
-<h4>Comparar soluções: <%= solIds.join("  ·  ") %></h4>
+<h4>Comparar soluções: <%= sols.map(s => s.external_id).join(' · ') %></h4>
 
 <table class="striped">
   <thead>
-    <tr><th>Métrica</th>
-      <% solIds.forEach(id=>{ %><th>Sol <%= id %></th><% }) %>
+    <tr>
+      <th>Métrica</th>
+      <% sols.forEach(s => { %>
+        <th>Sol <%= s.external_id %></th>
+      <% }) %>
     </tr>
   </thead>
   <tbody>
-    <tr><td>Conflicts</td><% solIds.forEach(()=>{ %><td>0</td><% }) %></tr>
-    <tr><td>Utilização</td><% solIds.forEach(()=>{ %><td>83%</td><% }) %></tr>
-    <tr><td>Gaps</td><% solIds.forEach(()=>{ %><td>3 h</td><% }) %></tr>
+    <!-- Conflicts -->
+    <tr>
+      <td>Conflicts</td>
+      <% sols.forEach(s => { %>
+        <td><%= s.metrics.conflicts %></td>
+      <% }) %>
+    </tr>
+
+    <!-- Waste (ou Utilização, se preferires inverter) -->
+    <tr>
+      <td>Waste&nbsp;(lugares vazios)</td>
+      <% sols.forEach(s => { %>
+        <td><%= s.metrics.waste %></td>
+      <% }) %>
+    </tr>
+
+    <!-- Exemplo extra: se já calculares “gaps” na BD / serviço  -->
+    <% if (sols[0].metrics.gaps !== undefined) { %>
+      <tr>
+        <td>Gaps</td>
+        <% sols.forEach(s => { %>
+          <td><%= s.metrics.gaps %> h</td>
+        <% }) %>
+      </tr>
+    <% } %>
   </tbody>
 </table>
 
-<a class="btn blue">Adoptar (placeholder)</a>
+<a id="btn-adopt" class="btn blue <%= sols.length !== 1 ? '' : 'disabled' %>"
+   href="<%= sols.length === 1 ? '/schedule/' + sols[0].id + '/adopt' : '#' %>">
+  Adoptar esta solução
+</a>

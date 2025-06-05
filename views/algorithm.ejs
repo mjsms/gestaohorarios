@@ -1,26 +1,21 @@
-<h4>Histórico de Execuções</h4>
-
-<form action="/algorithm/generate" method="post" style="display:inline;">
-  <button type="submit" class="btn blue">
-    Gerar Horário
-  </button>
-</form>
-
+<!-- views/algorithm.ejs (exemplo simples) -->
+<h2>Histórico de Execuções</h2>
+<a href="/algorithm/generate" class="btn blue">GERAR HORÁRIO</a>
 
 <table class="striped">
   <thead>
-    <tr>
-      <th>ID</th><th>Data</th><th>Algoritmo</th><th># Sol.</th><th>HV</th>
-    </tr>
+    <tr><th>ID</th><th>Data</th><th>Algoritmo</th><th># Sol.</th><th>HV</th></tr>
   </thead>
   <tbody>
   <% runs.forEach(r => { %>
     <tr>
-      <td><a href="/algorithm/<%= r.id %>"><%= r.id %></a></td>
-      <td><%= r.date %></td>
+      <td>
+        <a href="/algorithm/<%= r.id %>"><%= r.id %></a>
+      </td>
+      <td><%= r.dataValues.date %></td>
       <td><%= r.algorithm %></td>
-      <td><%= r.count %></td>
-      <td><%= r.hv %></td>
+      <td><%= r.dataValues.solCnt %></td>
+      <td><%= r.hv ? Number(r.hv).toFixed(3) : '—' %></td>
     </tr>
   <% }) %>
   </tbody>
