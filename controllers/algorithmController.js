@@ -4,6 +4,9 @@ const axios = require('axios');
 const timetableService = require("../services/timetableServices");
 const { models, sequelize } = require('../db');
 
+const POP_SIZE = 400;
+const N_GEN    = 100;
+
 // controllers/algorithmController.js
 exports.list = async (req, res, next) => {
   try {
@@ -130,8 +133,8 @@ exports.generate = async (req, res, next) => {
     /* 2) chama a API ---------------------------------------------------- */
     const startedAt  = new Date();
     const apiResp    = await axios.post(
-      process.env.OPTIMISER_URL || "http://localhost:8000/optimise",
-      { data: payload, pop_size: 400, n_gen: 3 },
+      process.env.OPTIMISER_URL || "http://127.0.0.1:8000/optimise",
+      { data: payload, pop_size: POP_SIZE, n_gen: N_GEN},
       { timeout: 9999999 }
     );
     const finishedAt = new Date();
@@ -139,9 +142,9 @@ exports.generate = async (req, res, next) => {
     /* 3) persiste a run ------------------------------------------------- */
     const run = await models.AlgorithmRun.create({
       algorithm:  "NSGA-II",
-      pop_size:   400,
-      n_gen:      200,
-      hv:         0,          
+      pop_size:   POP_SIZE,
+      n_gen:      N_GEN,
+      hv:         apiResp.data.hv,
       started_at: startedAt,
       finished_at: finishedAt
     }, { transaction: t });
@@ -158,7 +161,7 @@ exports.generate = async (req, res, next) => {
         conflicts:   sol.metrics.conflicts,
         waste:       sol.metrics.waste,
         utilisation: utilisation.toFixed(2),
-        gaps:        0               // ← por enquanto; 
+        gaps:        0               // ← por enquanto;
     }, { transaction: t });
 
       // bulk insert das alocações

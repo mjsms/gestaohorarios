@@ -17,7 +17,6 @@ const getScheduleByClassId = async (req, res) => {
         LEFT JOIN "ScheduleVersion" sv ON s."versionId" = sv.id
         WHERE sh."classGroupId" = :classGroupId
         AND sv."isCurrent" = TRUE
-        AND s.date >= CURRENT_DATE
         ORDER BY s.date ASC, s."startTime" ASC;
     `;
 

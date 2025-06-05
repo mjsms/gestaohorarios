@@ -1,22 +1,29 @@
-<!-- views/algorithm.ejs (exemplo simples) -->
+<!-- views/algorithm.ejs -->
+
 <h2>Histórico de Execuções</h2>
 <a href="/algorithm/generate" class="btn blue">GERAR HORÁRIO</a>
 
 <table class="striped">
   <thead>
-    <tr><th>ID</th><th>Data</th><th>Algoritmo</th><th># Sol.</th><th>HV</th></tr>
+    <tr>
+      <th>ID</th>
+      <th>Data</th>
+      <th>Algoritmo</th>
+      <th># Sol.</th>
+      <th>HV</th>    <!-- coluna HV incluída -->
+    </tr>
   </thead>
   <tbody>
-  <% runs.forEach(r => { %>
-    <tr>
-      <td>
-        <a href="/algorithm/<%= r.id %>"><%= r.id %></a>
-      </td>
-      <td><%= r.dataValues.date %></td>
-      <td><%= r.algorithm %></td>
-      <td><%= r.dataValues.solCnt %></td>
-      <td><%= r.hv ? Number(r.hv).toFixed(3) : '—' %></td>
-    </tr>
-  <% }) %>
+    <% runs.forEach(r => { %>
+      <tr>
+        <td>
+          <a href="/algorithm/<%= r.id %>"><%= r.id %></a>
+        </td>
+        <td><%= r.dataValues.date %></td>
+        <td><%= r.algorithm %></td>
+        <td><%= r.dataValues.solCnt %></td>
+        <td><%= r.hv ? Number(r.hv).toFixed(3) : '—' %></td>
+      </tr>
+    <% }) %>
   </tbody>
 </table>
